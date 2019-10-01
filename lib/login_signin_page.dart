@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'authentication.dart';
 import 'home_page.dart';
-// ENUM for togling form mode
+import 'login_signup_page.dart';
 
-class LoginSignUpPage extends StatefulWidget {
-  LoginSignUpPage({this.auth});
+// ENUM for togling form mode
+enum FormMode { LOGIN, SIGNUP }
+
+class LoginSignInPage extends StatefulWidget {
+  LoginSignInPage({this.auth});
   final BaseAuth auth;
 
   @override
-  _LoginSignUpPageState createState() => _LoginSignUpPageState();
+  _LoginSignInPageState createState() => _LoginSignInPageState();
 }
 
-class _LoginSignUpPageState extends State<LoginSignUpPage> {
+class _LoginSignInPageState extends State<LoginSignInPage> {
   //Init key for working with form
   final _formKey = new GlobalKey<FormState>();
 
   String _email;
   String _password;
-  String _name;
-  String _phone;
   String _errorMessage;
 
   String signedInString = "Signed in: ";
@@ -58,8 +59,8 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     if (_validateAndSave()) {
       String userId = "";
       try {
-        userId = await widget.auth.signUp(_email, _password, _phone, _name);
-        print(signedUpString + '$userId');
+        userId = await widget.auth.signIn(_email, _password);
+        print(signedInString + '$userId');
 
         setState(() {
           _isLoading = false;
@@ -120,8 +121,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             shrinkWrap: true,
             children: <Widget>[
               _showLogo(),
-              _showNameInput(),
-              _showPhoneInput(),
               _showEmailInput(),
               _showPasswordInput(),
               _showPrimaryButton(),
@@ -198,52 +197,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     );
   }
 
-  Widget _showNameInput() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
-      child: new TextFormField(
-        maxLines: 1,
-        obscureText: false,
-        autofocus: false,
-        decoration: new InputDecoration(
-            hintText: 'Name',
-            icon: new Icon(
-              Icons.people,
-              color: Colors.grey,
-            )),
-        validator: (value) {
-          if (value.isEmpty) return errorEmptyName;
-          if (value.length < 1) return errorShortName;
-          return null;
-        },
-        onSaved: (value) => _name = value.trim(),
-      ),
-    );
-  }
-
-  Widget _showPhoneInput() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
-      child: new TextFormField(
-        maxLines: 1,
-        obscureText: false,
-        autofocus: false,
-        keyboardType: TextInputType.phone,
-        decoration: new InputDecoration(
-            hintText: 'Phone',
-            icon: new Icon(
-              Icons.phone,
-              color: Colors.grey,
-            )),
-        validator: (value) {
-          if (value.isEmpty) return errorEmptyPhone;
-          return null;
-        },
-        onSaved: (value) => _phone = value.trim(),
-      ),
-    );
-  }
-
   Widget _showPrimaryButton() {
     return new Padding(
         padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, 0.0),
@@ -252,7 +205,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
           minWidth: 200.0,
           height: 42.0,
           color: Colors.blue,
-          child: new Text(createAccountText,
+          child: new Text(loginText,
               style: new TextStyle(fontSize: 20.0, color: Colors.white)),
           onPressed: _validateAndSubmit,
         ));
@@ -260,9 +213,13 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showSecondaryButton() {
     return new FlatButton(
-        child: new Text(signinText,
-            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300)),
-        onPressed: () => {Navigator.of(context).pop()});
+      child: new Text(createAccountText,
+          style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300)),
+      onPressed: () => {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => LoginSignUpPage(auth: widget.auth)))
+      },
+    );
   }
 
   Widget _showErrorMessage() {
