@@ -1,4 +1,4 @@
-package com.example.mlab
+package com.example.my_ios_app
 
 import android.os.Bundle
 
