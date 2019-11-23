@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'authentication.dart';
-import 'home_page.dart';
+import 'package:my_ios_app/styles.dart';
+import 'package:my_ios_app/strings.dart';
+
 // ENUM for togling form mode
+enum FormMode { LOGIN, SIGNUP }
 
 class LoginSignUpPage extends StatefulWidget {
-  LoginSignUpPage({this.auth});
-  final BaseAuth auth;
+  LoginSignUpPage({this.auth, this.onSignedIn});
+  final Auth auth;
+  final VoidCallback onSignedIn;
 
   @override
   _LoginSignUpPageState createState() => _LoginSignUpPageState();
@@ -17,27 +21,28 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   String _email;
   String _password;
-  String _name;
-  String _phone;
   String _errorMessage;
 
-  String signedInString = "Signed in: ";
-  String signedUpString = "Signed up: ";
-  String appTitle = "Flutter login demo";
-  String hintEmail = "Email";
-  String hintPassword = "Password";
-  String errorEmptyPassword = 'Password can\'t be empty';
-  String errorEmptyEmail = 'Email can\'t be empty';
-  String errorShortPassword = 'Password is too short';
-  String errorEmptyPhone = 'Phone can\'t be empty';
-  String errorShortName = 'Name is too short';
-  String createAccountText = 'Create an account';
-  String signinText = 'Have an account? Sign in';
-  String errorEmptyName = 'Name can\'t be empty';
-  String loginText = 'Login';
-
+  // Initial form is login form
+  FormMode _formMode = FormMode.LOGIN;
   bool _isIos;
   bool _isLoading;
+
+  void _changeFormToSignUp() {
+    _formKey.currentState.reset();
+    _errorMessage = "";
+    setState(() {
+      _formMode = FormMode.SIGNUP;
+    });
+  }
+
+  void _changeFormToLogin() {
+    _formKey.currentState.reset();
+    _errorMessage = "";
+    setState(() {
+      _formMode = FormMode.LOGIN;
+    });
+  }
 
 // Check if form is valid
   bool _validateAndSave() {
@@ -49,6 +54,27 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     return false;
   }
 
+  // Get user ID depending on Form type
+  Future<String> _getUserId() async {
+    String userId = "";
+    if (_formMode == FormMode.LOGIN) {
+      userId = await widget.auth.signIn(_email, _password);
+      print(singnedInString + 'Signed in: $userId');
+    } else {
+      userId = await widget.auth.signUp(_email, _password);
+      print('Signed up user: $userId');
+    }
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (userId.length > 0 && userId != null && _formMode == FormMode.LOGIN) {
+      widget.onSignedIn();
+    }
+
+    return userId;
+  }
+
   // Perform login or signup
   void _validateAndSubmit() async {
     setState(() {
@@ -58,19 +84,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     if (_validateAndSave()) {
       String userId = "";
       try {
-        userId = await widget.auth.signUp(_email, _password, _phone, _name);
-        print(signedUpString + '$userId');
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (userId.length > 0 && userId != null) {
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                  builder: (context) => new HomePage(auth: widget.auth)),
-              (Route<dynamic> route) => false);
-        }
+        userId = await _getUserId();
       } catch (e) {
         print('Error: $e');
         setState(() {
@@ -100,7 +114,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(appTitle),
+        title: new Text(Strings.appTitle),
       ),
       body: new Stack(
         children: <Widget>[
@@ -120,8 +134,12 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             shrinkWrap: true,
             children: <Widget>[
               _showLogo(),
-              _showNameInput(),
-              _showPhoneInput(),
+              _formMode == FormMode.SIGNUP
+                  ? _showNameInput()
+                  : SizedBox.shrink(),
+              _formMode == FormMode.SIGNUP
+                  ? _showPhoneInput()
+                  : SizedBox.shrink(),
               _showEmailInput(),
               _showPasswordInput(),
               _showPrimaryButton(),
@@ -158,18 +176,20 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showEmailInput() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      padding: Styles.inputFormPadding,
       child: new TextFormField(
         maxLines: 1,
         keyboardType: TextInputType.emailAddress,
         autofocus: false,
         decoration: new InputDecoration(
-            hintText: hintEmail,
+            hintText: Strings.hintEmail,
             icon: new Icon(
               Icons.mail,
               color: Colors.grey,
             )),
-        validator: (value) => value.isEmpty ? errorEmptyEmail : null,
+        validator: (value) => value.isEmpty ? Strings.errorEmptyEmail : 
+          (RegExp( r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").hasMatch(value) ? 
+              null : Strings.errorFormat),
         onSaved: (value) => _email = value.trim(),
       ),
     );
@@ -177,20 +197,20 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showPasswordInput() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      padding: Styles.inputFormPadding,
       child: new TextFormField(
         maxLines: 1,
         obscureText: true,
         autofocus: false,
         decoration: new InputDecoration(
-            hintText: hintPassword,
+            hintText: Strings.hintPassword,
             icon: new Icon(
               Icons.lock,
               color: Colors.grey,
             )),
         validator: (value) {
-          if (value.isEmpty) return errorEmptyPassword;
-          if (value.length < 8) return errorShortPassword;
+          if (value.isEmpty) return Strings.errorEmptyPassword;
+          if (value.length < 8) return Strings.errorShortPassword;
           return null;
         },
         onSaved: (value) => _password = value.trim(),
@@ -200,81 +220,82 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
 
   Widget _showNameInput() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      padding: Styles.inputFormPadding,
       child: new TextFormField(
         maxLines: 1,
         obscureText: false,
         autofocus: false,
         decoration: new InputDecoration(
-            hintText: 'Name',
+            hintText: Strings.hintName,
             icon: new Icon(
               Icons.people,
               color: Colors.grey,
             )),
         validator: (value) {
-          if (value.isEmpty) return errorEmptyName;
-          if (value.length < 1) return errorShortName;
+          if (value.isEmpty) return Strings.errorEmptyName;
+          if (value.length < 1) return Strings.errorShortName;
           return null;
         },
-        onSaved: (value) => _name = value.trim(),
+        onSaved: (value) => _password = value.trim(),
       ),
     );
   }
 
   Widget _showPhoneInput() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      padding: Styles.inputFormPadding,
       child: new TextFormField(
         maxLines: 1,
         obscureText: false,
         autofocus: false,
         keyboardType: TextInputType.phone,
         decoration: new InputDecoration(
-            hintText: 'Phone',
+            hintText: Strings.hintPhone,
             icon: new Icon(
               Icons.phone,
               color: Colors.grey,
             )),
         validator: (value) {
-          if (value.isEmpty) return errorEmptyPhone;
-          return null;
+          if (value.isEmpty) return Strings.errorEmptyPhone;
+          if(RegExp( r"^\+?3?8?(0\d{9})$").hasMatch(value)){
+              return null;
+              
+          } else return Strings.errorFormat;
         },
-        onSaved: (value) => _phone = value.trim(),
+        onSaved: (value) => _password = value.trim(),
       ),
     );
   }
 
   Widget _showPrimaryButton() {
     return new Padding(
-        padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, 0.0),
+        padding: Styles.primaryButtonPadding,
         child: new MaterialButton(
           elevation: 5.0,
           minWidth: 200.0,
           height: 42.0,
           color: Colors.blue,
-          child: new Text(createAccountText,
-              style: new TextStyle(fontSize: 20.0, color: Colors.white)),
+          child: _formMode == FormMode.LOGIN
+              ? new Text(Strings.loginText, style: Styles.primaryText)
+              : new Text(Strings.createAccountText, style: Styles.primaryText),
           onPressed: _validateAndSubmit,
         ));
   }
 
   Widget _showSecondaryButton() {
     return new FlatButton(
-        child: new Text(signinText,
-            style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.w300)),
-        onPressed: () => {Navigator.of(context).pop()});
+      child: _formMode == FormMode.LOGIN
+          ? new Text(Strings.createAccountText, style: Styles.secondaryTextLogin)
+          : new Text(Strings.signinText, style: Styles.secondaryTextLogin),
+      onPressed: _formMode == FormMode.LOGIN
+          ? _changeFormToSignUp
+          : _changeFormToLogin,
+    );
   }
 
   Widget _showErrorMessage() {
     if (_errorMessage.length > 0 && _errorMessage != null) {
-      return new Text(
-        _errorMessage,
-        style: TextStyle(
-            fontSize: 13.0,
-            color: Colors.red,
-            height: 1.0,
-            fontWeight: FontWeight.w300),
-      );
+      return new Text(_errorMessage, style: Styles.errorText);
     } else {
       return new Container(
         height: 0.0,
