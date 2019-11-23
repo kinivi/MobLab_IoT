@@ -14,6 +14,7 @@ abstract class Styles {
   static const primaryText = TextStyle(fontSize: 20.0, color: Colors.white);
   static const primaryCardText = TextStyle(fontSize: 20.0, color: Colors.black);
   static const secondaryText = TextStyle(fontSize: 18.0, color: Colors.white);
+  static const secondaryTextLogin = TextStyle(fontSize: 18.0, color: Colors.black);
 
   static const errorText = TextStyle(
       fontSize: 13.0,
@@ -33,4 +34,10 @@ abstract class Styles {
     fontFamily: CupertinoIcons.iconFont,
     fontPackage: CupertinoIcons.iconFontPackage,
   );
+
+  static const servingInfoBorderColor = Color(0xffb0b0b0);
+
+  static const ColorFilter desaturatedColorFilter =
+      // 222222 is a random color that has low color saturation.
+      ColorFilter.mode(Color(0xFF222222), BlendMode.saturation);
 }
