@@ -78,7 +78,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       print(url);
       setState(() {
-        print("Profile Picture uploaded");
         _isSaving = false;
         _profileURL = url;
 
@@ -190,7 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       )),
                   validator: (value) => value.isEmpty
                       ? Strings.errorEmptyEmail
-                      : (RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+                      : (RegExp(Strings.regexpEmail)
                               .hasMatch(value)
                           ? null
                           : Strings.errorFormat),
