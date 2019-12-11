@@ -1,20 +1,19 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_ios_app/api/worker.dart';
-import 'package:my_ios_app/details_page.dart';
+import 'package:my_ios_app/strings.dart';
 import 'package:my_ios_app/styles.dart';
 
-class WorkersList extends StatelessWidget {
-  List<Worker> workers;
-
-  WorkersList(this.workers);
+class DetailsPage extends StatelessWidget {
+  Worker worker; 
+  DetailsPage({Key key, this.worker}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return new ListView.builder(
-        itemCount: workers == null ? 0 : workers.length,
-        itemBuilder: (BuildContext context, int index) {
-          return new Container(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(Strings.detailsPageTitle),
+      ),
+      body: new Container(
               child: new Center(
                   child: new Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -23,13 +22,12 @@ class WorkersList extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => new DetailsPage(worker: workers[index],),
+                    builder: (context) => new DetailsPage(),
                   ),
                 ),
-                child: new Card(
                     child: new Column(
                   children: <Widget>[
-                    Image.network(workers[index].imageLink),
+                    Image.network(worker.imageLink),
                     Padding(
                       padding: Styles.cardPadding,
                       child: Column(
@@ -39,22 +37,21 @@ class WorkersList extends StatelessWidget {
                           Padding(
                             padding: Styles.cardHeadPadding,
                             child: Text(
-                              workers[index].transportName,
+                              worker.transportName,
                               style: Styles.primaryCardText,
                               textAlign: TextAlign.center,
                             ),
                           ),
                           Text("TransportID: " +
-                              workers[index].transportId.toString()),
-                          Text("MineID: " + workers[index].mineId.toString()),
+                              worker.transportId.toString()),
+                          Text("MineID: " + worker.mineId.toString()),
                         ],
                       ),
                     )
                   ],
                 )),
-              )
             ],
-          )));
-        });
+          )))
+    );
   }
 }
